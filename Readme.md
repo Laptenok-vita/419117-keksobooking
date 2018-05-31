@@ -1,7 +1,7 @@
 # Личный проект «Кексобукинг» [![Build status][travis-image]][travis-url]
 
 * Студент: [Вита Лаптёнок](https://up.htmlacademy.ru/javascript/14/user/419117).
-* Наставник: `Неизвестно`.
+* Наставник: [Руфат Хасларов] (https://up.htmlacademy.ru/javascript/14/user/372587).
 
 ---
 
