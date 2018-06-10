@@ -51,8 +51,8 @@ similarMapElementTemplate = document.querySelector('template')
 var renderMapElement = function (mapArray) {
   var MapElement = similarMapElementTemplate.cloneNode(true);
 
-  // MapElement.querySelector('.map__pin').style = 'left: ' + mapArray.location.x + 'px';
-  // MapElement.querySelector('.map__pin').style = 'top: ' + mapArray.location.y + 'px';
+  MapElement.querySelector('.map__pin').style.left = mapArray.location.x + 'px';
+  MapElement.querySelector('.map__pin').style.top = mapArray.location.y + 'px';
   MapElement.querySelector('img').src = mapArray.author.avatar;
   MapElement.querySelector('img').alt = mapArray.offer.title;
 
