@@ -1,6 +1,8 @@
 'use strict';
 
-var AVATARS_AMOUNT = [
+var ADS_AMOUNT = 8;
+
+var AVATARS = [
   'img/avatars/user01.png',
   'img/avatars/user02.png',
   'img/avatars/user03.png',
@@ -22,20 +24,21 @@ var TITLES = [
   'Неуютное бунгало по колено в воде'
 ];
 
-var TYPES_HOUSES = [
-  {'palace': 'Дворец'},
-  {'flat': 'Квартира'},
-  {'house': 'Дом'},
-  {'bungalo': 'Бунгало'}
-];
+var TYPES_HOUSES =
+{
+  'palace': 'Дворец',
+  'flat': 'Квартира',
+  'house': 'Дом',
+  'bungalo': 'Бунгало'
+};
 
-var TIME_CHECKIN = [
+var CHECKIN_DATES = [
   '12:00',
   '13:00',
   '14:00'
 ];
 
-var TIME_CHECKOUT = [
+var CHECKOUT_DATES = [
   '12:00',
   '13:00',
   '14:00'
@@ -74,20 +77,14 @@ var mapAdTemplate = document.querySelector('template')
   .querySelector('.map__card');
 
 var createNumber = function (min, max) {
-  return Math.floor(Math.random() * (max - min) + min);
+  return Math.round(Math.random() * (max - min) + min);
+};
+
+var getRandomValueFromArray = function (array) {
+  return array[Math.floor(Math.random() * array.length)];
 };
 
 var shuffleArray = function (array) {
-  for (var i = array.length - 1; i >= 0; i--) {
-    var j = Math.floor(Math.random() * (i + 1));
-    var temp = array[i];
-    array[i] = array[j];
-    array[j] = temp;
-  }
-  return temp;
-};
-
-var getRandomPhotos = function (array) {
   for (var i = array.length - 1; i >= 0; i--) {
     var j = Math.floor(Math.random() * (i + 1));
     var temp = array[i];
@@ -101,6 +98,16 @@ var getRandomLength = function (array) {
   var cloneArray = array.slice();
   cloneArray.length = Math.round(Math.random() * array.length);
   return cloneArray;
+};
+
+var getRandomIndex = function (array) {
+  for (var i = array.length - 1; i >= 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var temp = i;
+    i = j;
+    j = temp;
+  }
+  return temp;
 };
 
 var renderMapPin = function (pinArray) {
@@ -137,25 +144,14 @@ var ads = [];
 var fragmentPin = document.createDocumentFragment();
 var fragmentMapAd = document.createDocumentFragment();
 
-var getRandomIndex = function (array) {
-  for (var i = array.length - 1; i >= 0; i--) {
-    var j = Math.floor(Math.random() * (i + 1));
-    var temp = i;
-    i = j;
-    j = temp;
-  }
-  return temp;
-};
-
-var indexArray = TYPES_HOUSES[createNumber(0, TYPES_HOUSES.length)];
-for (var key in indexArray) {
-  var houseType = indexArray[key];
+for (var key in TYPES_HOUSES) {
+  var houseType = TYPES_HOUSES[key];
 }
 
 var createAds = function () {
   var rentAd = {
     'author': {
-      'avatar': AVATARS_AMOUNT[getRandomIndex(AVATARS_AMOUNT)]
+      'avatar': AVATARS[getRandomIndex(AVATARS)]
     },
     'offer': {
       'title': TITLES[getRandomIndex(TITLES)],
@@ -164,11 +160,11 @@ var createAds = function () {
       'type': houseType,
       'rooms': createNumber(1, 5),
       'guests': createNumber(1, 100),
-      'checkin': shuffleArray(TIME_CHECKIN),
-      'checkout': shuffleArray(TIME_CHECKOUT),
+      'checkin': getRandomValueFromArray(CHECKIN_DATES),
+      'checkout': getRandomValueFromArray(CHECKOUT_DATES),
       'features': getRandomLength(FEATURES),
       'description': '',
-      'photos': getRandomPhotos(PHOTOS)
+      'photos': shuffleArray(PHOTOS)
     },
     'location': {
       'x': x,
@@ -179,7 +175,7 @@ var createAds = function () {
   ads.push(rentAd);
 };
 
-for (var i = 0; i < 8; i++) {
+for (var i = 0; i < ADS_AMOUNT; i++) {
   var x = createNumber(300, 900) - PIN_WIDTH;
   var y = createNumber(130, 630) - PIN_HEIGHT;
   createAds();
