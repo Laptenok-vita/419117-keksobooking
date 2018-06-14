@@ -1,6 +1,6 @@
 'use strict';
 
-var AVATAR_AMOUNT = [
+var AVATARS_AMOUNT = [
   'img/avatars/user01.png',
   'img/avatars/user02.png',
   'img/avatars/user03.png',
@@ -11,7 +11,7 @@ var AVATAR_AMOUNT = [
   'img/avatars/user08.png'
 ];
 
-var TITLE = [
+var TITLES = [
   'Большая уютная квартира',
   'Маленькая неуютная квартира',
   'Огромный прекрасный дворец',
@@ -23,17 +23,10 @@ var TITLE = [
 ];
 
 var TYPES_HOUSES = [
-  'palace',
-  'flat',
-  'house',
-  'bungalo'
-];
-
-var TYPES_HOUSES_RUS = [
-  'Дворец',
-  'Квартира',
-  'Дом',
-  'Бунгало'
+  {'palace': 'Дворец'},
+  {'flat': 'Квартира'},
+  {'house': 'Дом'},
+  {'bungalo': 'Бунгало'}
 ];
 
 var TIME_CHECKIN = [
@@ -94,25 +87,19 @@ var shuffleArray = function (array) {
   return temp;
 };
 
-var unshuffleArray = function (array) {
-  var i = Math.floor(Math.random() * array.length);
-  return array[i];
+var getRandomPhotos = function (array) {
+  for (var i = array.length - 1; i >= 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var temp = array[i];
+    array[i] = array[j];
+    array[j] = temp;
+  }
+  return array;
 };
 
 var getRandomLength = function (array) {
   var cloneArray = array.slice();
   cloneArray.length = Math.round(Math.random() * array.length);
-  return cloneArray;
-};
-
-var getRandomPhotos = function (array) {
-  var cloneArray = array.slice();
-  for (var i = cloneArray.length - 1; i >= 0; i--) {
-    var j = Math.floor(Math.random() * (i + 1));
-    var temp = cloneArray[i];
-    cloneArray[i] = cloneArray[j];
-    cloneArray[j] = temp;
-  }
   return cloneArray;
 };
 
@@ -133,7 +120,7 @@ var renderMapAd = function (mapAdArray) {
   mapCard.querySelector('.popup__title').textContent = mapAdArray.offer.title;
   mapCard.querySelector('.popup__text--address').textContent = mapAdArray.offer.address;
   mapCard.querySelector('.popup__text--price').textContent = mapAdArray.offer.price + ' ₽/ночь';
-  mapCard.querySelector('.popup__type').textContent = TYPES_HOUSES_RUS[TYPES_HOUSES.indexOf(mapAdArray.offer.type)];
+  mapCard.querySelector('.popup__type').textContent = mapAdArray.offer.type;
   mapCard.querySelector('.popup__text--capacity').textContent = mapAdArray.offer.rooms + ' комнаты для ' + mapAdArray.offer.guests + ' гостей';
   mapCard.querySelector('.popup__text--time').textContent = 'Заезд после ' + mapAdArray.offer.checkin + ', выезд до ' + mapAdArray.offer.checkout;
   mapCard.querySelector('.popup__features').textContent = mapAdArray.offer.features;
@@ -146,23 +133,35 @@ var renderMapAd = function (mapAdArray) {
   return mapCard;
 };
 
-var adsArray = [];
+var ads = [];
 var fragmentPin = document.createDocumentFragment();
 var fragmentMapAd = document.createDocumentFragment();
 
-for (var i = 0; i < 8; i++) {
-  var CoordinateX = createNumber(300, 900) - PIN_WIDTH;
-  var CoordinateY = createNumber(130, 630) - PIN_HEIGHT;
+var getRandomIndex = function (array) {
+  for (var i = array.length - 1; i >= 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var temp = i;
+    i = j;
+    j = temp;
+  }
+  return temp;
+};
 
+var indexArray = TYPES_HOUSES[createNumber(0, TYPES_HOUSES.length)];
+for (var key in indexArray) {
+  var houseType = indexArray[key];
+}
+
+var createAds = function () {
   var rentAd = {
     'author': {
-      'avatar': shuffleArray(AVATAR_AMOUNT)
+      'avatar': AVATARS_AMOUNT[getRandomIndex(AVATARS_AMOUNT)]
     },
     'offer': {
-      'title': shuffleArray(TITLE),
-      'address': CoordinateX + ', ' + CoordinateY,
+      'title': TITLES[getRandomIndex(TITLES)],
+      'address': x + ', ' + y,
       'price': createNumber(1000, 1000000),
-      'type': unshuffleArray(TYPES_HOUSES),
+      'type': houseType,
       'rooms': createNumber(1, 5),
       'guests': createNumber(1, 100),
       'checkin': shuffleArray(TIME_CHECKIN),
@@ -172,17 +171,22 @@ for (var i = 0; i < 8; i++) {
       'photos': getRandomPhotos(PHOTOS)
     },
     'location': {
-      'x': CoordinateX,
-      'y': CoordinateY
+      'x': x,
+      'y': y
     }
   };
 
-  adsArray.push(rentAd);
+  ads.push(rentAd);
+};
 
-  fragmentPin.appendChild(renderMapPin(adsArray[i]));
+for (var i = 0; i < 8; i++) {
+  var x = createNumber(300, 900) - PIN_WIDTH;
+  var y = createNumber(130, 630) - PIN_HEIGHT;
+  createAds();
+  fragmentPin.appendChild(renderMapPin(ads[i]));
 }
 
-fragmentMapAd.appendChild(renderMapAd(adsArray[0]));
+fragmentMapAd.appendChild(renderMapAd(ads[0]));
 
 mapPins.appendChild(fragmentPin);
 mapAd.insertBefore(fragmentMapAd, pinBefore);
