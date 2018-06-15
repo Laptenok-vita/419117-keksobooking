@@ -2,17 +2,6 @@
 
 var ADS_AMOUNT = 8;
 
-var AVATARS = [
-  'img/avatars/user01.png',
-  'img/avatars/user02.png',
-  'img/avatars/user03.png',
-  'img/avatars/user04.png',
-  'img/avatars/user05.png',
-  'img/avatars/user06.png',
-  'img/avatars/user07.png',
-  'img/avatars/user08.png'
-];
-
 var TITLES = [
   'Большая уютная квартира',
   'Маленькая неуютная квартира',
@@ -62,20 +51,6 @@ var PHOTOS = [
 var PIN_WIDTH = 40;
 var PIN_HEIGHT = 40;
 
-var mapToggle = document.querySelector('.map');
-mapToggle.classList.remove('map--faded');
-
-var mapPins = document.querySelector('.map__pins');
-var pinTemplate = document.querySelector('template')
-  .content
-  .querySelector('.map__pin');
-var pinBefore = document.querySelector('.map__filters-container');
-
-var mapAd = document.querySelector('.map');
-var mapAdTemplate = document.querySelector('template')
-  .content
-  .querySelector('.map__card');
-
 var createNumber = function (min, max) {
   return Math.round(Math.random() * (max - min) + min);
 };
@@ -110,6 +85,63 @@ var getRandomIndex = function (array) {
   return temp;
 };
 
+var mapToggle = document.querySelector('.map');
+mapToggle.classList.remove('map--faded');
+
+var mapPins = document.querySelector('.map__pins');
+var pinTemplate = document.querySelector('template')
+  .content
+  .querySelector('.map__pin');
+var pinBefore = document.querySelector('.map__filters-container');
+
+var mapAd = document.querySelector('.map');
+var mapAdTemplate = document.querySelector('template')
+  .content
+  .querySelector('.map__card');
+
+for (var key in TYPES_HOUSES) {
+  var houseType = TYPES_HOUSES[key];
+}
+
+var createAd = function (i) {
+  var x = createNumber(300, 900) - PIN_WIDTH;
+  var y = createNumber(130, 630) - PIN_HEIGHT;
+
+  var rentAd = {
+    'author': {
+      'avatar': 'img/avatars/user0' + (i + 1) + '.png'
+    },
+    'offer': {
+      'title': TITLES[getRandomIndex(TITLES)],
+      'address': x + ', ' + y,
+      'price': createNumber(1000, 1000000),
+      'type': houseType,
+      'rooms': createNumber(1, 5),
+      'guests': createNumber(1, 100),
+      'checkin': getRandomValueFromArray(CHECKIN_DATES),
+      'checkout': getRandomValueFromArray(CHECKOUT_DATES),
+      'features': getRandomLength(FEATURES),
+      'description': '',
+      'photos': shuffleArray(PHOTOS)
+    },
+    'location': {
+      'x': x,
+      'y': y
+    }
+  };
+  return rentAd;
+};
+
+var createAds = function () {
+  var ads = [];
+  for (var i = 0; i < ADS_AMOUNT; i++) {
+    ads[i] = createAd(i);
+  }
+  return ads;
+};
+
+var ads = createAds();
+
 var renderMapPin = function (pinArray) {
   var pin = pinTemplate.cloneNode(true);
 
@@ -140,45 +172,10 @@ var renderMapAd = function (mapAdArray) {
   return mapCard;
 };
 
-var ads = [];
 var fragmentPin = document.createDocumentFragment();
 var fragmentMapAd = document.createDocumentFragment();
 
-for (var key in TYPES_HOUSES) {
-  var houseType = TYPES_HOUSES[key];
-}
-
-var createAds = function () {
-  var rentAd = {
-    'author': {
-      'avatar': AVATARS[getRandomIndex(AVATARS)]
-    },
-    'offer': {
-      'title': TITLES[getRandomIndex(TITLES)],
-      'address': x + ', ' + y,
-      'price': createNumber(1000, 1000000),
-      'type': houseType,
-      'rooms': createNumber(1, 5),
-      'guests': createNumber(1, 100),
-      'checkin': getRandomValueFromArray(CHECKIN_DATES),
-      'checkout': getRandomValueFromArray(CHECKOUT_DATES),
-      'features': getRandomLength(FEATURES),
-      'description': '',
-      'photos': shuffleArray(PHOTOS)
-    },
-    'location': {
-      'x': x,
-      'y': y
-    }
-  };
-
-  ads.push(rentAd);
-};
-
 for (var i = 0; i < ADS_AMOUNT; i++) {
-  var x = createNumber(300, 900) - PIN_WIDTH;
-  var y = createNumber(130, 630) - PIN_HEIGHT;
-  createAds();
   fragmentPin.appendChild(renderMapPin(ads[i]));
 }
 
