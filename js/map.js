@@ -20,14 +20,12 @@ var HOUSES_TYPES = [
   'bungalo'
 ];
 
-var HOUSES_TYPES_DICT = [
-  {
-    'palace': 'Дворец',
-    'flat': 'Квартира',
-    'house': 'Дом',
-    'bungalo': 'Бунгало'
-  }
-];
+var HOUSES_TYPES_DICT = {
+  'palace': 'Дворец',
+  'flat': 'Квартира',
+  'house': 'Дом',
+  'bungalo': 'Бунгало'
+};
 
 var CHECKIN_DATES = [
   '12:00',
@@ -68,18 +66,19 @@ var getRandomValueFromArray = function (array) {
 };
 
 var shuffleArray = function (array) {
-  for (var i = array.length - 1; i >= 0; i--) {
+  var cloneArray = array.slice();
+  for (var i = cloneArray.length - 1; i >= 0; i--) {
     var j = Math.floor(Math.random() * (i + 1));
-    var temp = array[i];
-    array[i] = array[j];
-    array[j] = temp;
+    var temp = cloneArray[i];
+    cloneArray[i] = cloneArray[j];
+    cloneArray[j] = temp;
   }
-  return array;
+  return cloneArray;
 };
 
-var getRandomLength = function (array) {
-  var cloneArray = array.slice();
-  cloneArray.length = Math.round(Math.random() * array.length);
+var getRandomValuesFromArray = function (array) {
+  var cloneArray = shuffleArray(array);
+  cloneArray.length = getRandomNumberInRange(1, cloneArray.length);
   return cloneArray;
 };
 
@@ -93,12 +92,12 @@ var pinTemplate = document.querySelector('template')
 var pinBefore = document.querySelector('.map__filters-container');
 
 var mapAd = document.querySelector('.map');
-var mapAdTemplate = document.querySelector('template')
+var AdTemplate = document.querySelector('template')
   .content
   .querySelector('.map__card');
 
 var createAd = function (i) {
-  var x = getRandomNumberInRange(300, 900) - PIN_WIDTH;
+  var x = getRandomNumberInRange(300, 900) - (PIN_WIDTH / 2);
   var y = getRandomNumberInRange(130, 630) - PIN_HEIGHT;
 
   var rentAd = {
@@ -109,12 +108,12 @@ var createAd = function (i) {
       'title': AD_TITLES[i + 1],
       'address': x + ', ' + y,
       'price': getRandomNumberInRange(1000, 1000000),
-      'type': getRandomNumberInRange(0, HOUSES_TYPES.length),
+      'type': HOUSES_TYPES[getRandomNumberInRange(0, HOUSES_TYPES.length)],
       'rooms': getRandomNumberInRange(1, 5),
       'guests': getRandomNumberInRange(1, 100),
       'checkin': getRandomValueFromArray(CHECKIN_DATES),
       'checkout': getRandomValueFromArray(CHECKOUT_DATES),
-      'features': getRandomLength(FEATURES),
+      'features': getRandomValuesFromArray(FEATURES),
       'description': '',
       'photos': shuffleArray(PHOTOS)
     },
@@ -147,8 +146,8 @@ var renderMapPin = function (pinArray) {
   return pin;
 };
 
-var renderMapAd = function (ad) {
-  var mapCard = mapAdTemplate.cloneNode(true);
+var renderAd = function (ad) {
+  var mapCard = AdTemplate.cloneNode(true);
 
   mapCard.querySelector('.popup__title').textContent = ad.offer.title;
   mapCard.querySelector('.popup__text--address').textContent = ad.offer.address;
@@ -157,13 +156,22 @@ var renderMapAd = function (ad) {
   mapCard.querySelector('.popup__text--capacity').textContent = ad.offer.rooms + ' комнаты для ' + ad.offer.guests + ' гостей';
   mapCard.querySelector('.popup__text--time').textContent = 'Заезд после ' + ad.offer.checkin + ', выезд до ' + ad.offer.checkout;
 
-  mapCard.querySelector('.popup__features').textContent = ad.offer.features;
+  var featuresBlock = mapCard.querySelector('.popup__features');
+  featuresBlock.innerHTML = '';
+  for (var i = 0; i < ad.offer.features.length; i++) {
+    featuresBlock.innerHTML += '<li class="popup__feature popup__feature--' + ad.offer.features[i] + '"></li>';
+  }
 
   mapCard.querySelector('.popup__description').textContent = ad.offer.description;
 
-  mapCard.querySelector('.popup__photo').src = ad.offer.photos[0];
-  mapCard.appendChild(mapCard.querySelector('.popup__photo').cloneNode(true)).src = ad.offer.photos[1];
-  mapCard.appendChild(mapCard.querySelector('.popup__photo').cloneNode(true)).src = ad.offer.photos[2];
+  var photosBlock = mapCard.querySelector('.popup__photos');
+  var photoTemplate = photosBlock.querySelector('.popup__photo');
+  photosBlock.removeChild(photoTemplate);
+  for (i = 0; i < ad.offer.photos.length; i++) {
+    var photoElement = photoTemplate.cloneNode(true);
+    photoElement.src = ad.offer.photos[i];
+    photosBlock.appendChild(photoElement);
+  }
 
   mapCard.querySelector('img').src = ad.author.avatar;
 
@@ -180,7 +188,7 @@ var renderPins = function () {
   return fragmentPin;
 };
 
-fragmentMapAd.appendChild(renderMapAd(ads[0]));
+fragmentMapAd.appendChild(renderAd(ads[0]));
 
 mapPins.appendChild(renderPins());
 mapAd.insertBefore(fragmentMapAd, pinBefore);
