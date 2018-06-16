@@ -1,7 +1,5 @@
 'use strict';
 
-var ADS_AMOUNT = 8;
-
 var AD_TITLES = [
   'Большая уютная квартира',
   'Маленькая неуютная квартира',
@@ -54,8 +52,23 @@ var PHOTOS = [
   'http://o0.github.io/assets/images/tokyo/hotel3.jpg'
 ];
 
+var ADS_AMOUNT = 8;
 var PIN_WIDTH = 40;
 var PIN_HEIGHT = 40;
+
+var mapToggle = document.querySelector('.map');
+mapToggle.classList.remove('map--faded');
+var mapPins = document.querySelector('.map__pins');
+
+var pinTemplate = document.querySelector('template')
+  .content
+  .querySelector('.map__pin');
+var pinBefore = document.querySelector('.map__filters-container');
+
+var mapAd = document.querySelector('.map');
+var adTemplate = document.querySelector('template')
+  .content
+  .querySelector('.map__card');
 
 var getRandomNumberInRange = function (min, max) {
   return Math.round(Math.random() * (max - min) + min);
@@ -82,20 +95,6 @@ var getRandomValuesFromArray = function (array) {
   return cloneArray;
 };
 
-var mapToggle = document.querySelector('.map');
-mapToggle.classList.remove('map--faded');
-
-var mapPins = document.querySelector('.map__pins');
-var pinTemplate = document.querySelector('template')
-  .content
-  .querySelector('.map__pin');
-var pinBefore = document.querySelector('.map__filters-container');
-
-var mapAd = document.querySelector('.map');
-var AdTemplate = document.querySelector('template')
-  .content
-  .querySelector('.map__card');
-
 var createAd = function (i) {
   var x = getRandomNumberInRange(300, 900) - (PIN_WIDTH / 2);
   var y = getRandomNumberInRange(130, 630) - PIN_HEIGHT;
@@ -108,7 +107,7 @@ var createAd = function (i) {
       'title': AD_TITLES[i + 1],
       'address': x + ', ' + y,
       'price': getRandomNumberInRange(1000, 1000000),
-      'type': HOUSES_TYPES[getRandomNumberInRange(0, HOUSES_TYPES.length)],
+      'type': HOUSES_TYPES[getRandomValueFromArray(0, HOUSES_TYPES.length)],
       'rooms': getRandomNumberInRange(1, 5),
       'guests': getRandomNumberInRange(1, 100),
       'checkin': getRandomValueFromArray(CHECKIN_DATES),
@@ -135,7 +134,7 @@ var createAds = function () {
 
 var ads = createAds();
 
-var renderMapPin = function (pinArray) {
+var renderPin = function (pinArray) {
   var pin = pinTemplate.cloneNode(true);
 
   pin.style.left = pinArray.location.x + 'px';
@@ -147,7 +146,7 @@ var renderMapPin = function (pinArray) {
 };
 
 var renderAd = function (ad) {
-  var mapCard = AdTemplate.cloneNode(true);
+  var mapCard = adTemplate.cloneNode(true);
 
   mapCard.querySelector('.popup__title').textContent = ad.offer.title;
   mapCard.querySelector('.popup__text--address').textContent = ad.offer.address;
@@ -183,7 +182,7 @@ var fragmentMapAd = document.createDocumentFragment();
 var renderPins = function () {
   var fragmentPin = document.createDocumentFragment();
   for (var i = 0; i < ADS_AMOUNT; i++) {
-    fragmentPin.appendChild(renderMapPin(ads[i]));
+    fragmentPin.appendChild(renderPin(ads[i]));
   }
   return fragmentPin;
 };
