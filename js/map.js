@@ -37,7 +37,7 @@ var CHECKOUT_DATES = [
   '14:00'
 ];
 
-var FEATURES = [
+var AD_FEATURES = [
   'wifi',
   'dishwasher',
   'parking',
@@ -46,7 +46,7 @@ var FEATURES = [
   'conditioner'
 ];
 
-var PHOTOS = [
+var AD_PHOTOS = [
   'http://o0.github.io/assets/images/tokyo/hotel1.jpg',
   'http://o0.github.io/assets/images/tokyo/hotel2.jpg',
   'http://o0.github.io/assets/images/tokyo/hotel3.jpg'
@@ -107,14 +107,14 @@ var createAd = function (i) {
       'title': AD_TITLES[i + 1],
       'address': x + ', ' + y,
       'price': getRandomNumberInRange(1000, 1000000),
-      'type': HOUSES_TYPES[getRandomValueFromArray(0, HOUSES_TYPES.length)],
+      'type': getRandomValueFromArray(HOUSES_TYPES),
       'rooms': getRandomNumberInRange(1, 5),
       'guests': getRandomNumberInRange(1, 100),
       'checkin': getRandomValueFromArray(CHECKIN_DATES),
       'checkout': getRandomValueFromArray(CHECKOUT_DATES),
-      'features': getRandomValuesFromArray(FEATURES),
+      'features': getRandomValuesFromArray(AD_FEATURES),
       'description': '',
-      'photos': shuffleArray(PHOTOS)
+      'photos': shuffleArray(AD_PHOTOS)
     },
     'location': {
       'x': x,
@@ -134,15 +134,15 @@ var createAds = function () {
 
 var ads = createAds();
 
-var renderPin = function (pinArray) {
-  var pin = pinTemplate.cloneNode(true);
+var renderPin = function (pin) {
+  var pinElement = pinTemplate.cloneNode(true);
 
-  pin.style.left = pinArray.location.x + 'px';
-  pin.style.top = pinArray.location.y + 'px';
-  pin.querySelector('img').src = pinArray.author.avatar;
-  pin.querySelector('img').alt = pinArray.offer.title;
+  pinElement.style.left = pin.location.x + 'px';
+  pinElement.style.top = pin.location.y + 'px';
+  pinElement.querySelector('img').src = pin.author.avatar;
+  pinElement.querySelector('img').alt = pin.offer.title;
 
-  return pin;
+  return pinElement;
 };
 
 var renderAd = function (ad) {
