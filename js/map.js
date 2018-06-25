@@ -53,11 +53,26 @@ var AD_PHOTOS = [
 ];
 
 var ADS_AMOUNT = 8;
-var PIN_WIDTH = 40;
-var PIN_HEIGHT = 40;
+var PIN_WIDTH = 50;
+var PIN_HEIGHT = 70;
+var MIN_X = 300;
+var MAX_X = 900;
+var MIN_Y = 130;
+var MAX_Y = 630;
+var PIN_MAIN_WIDTH = 65;
+var PIN_MAIN_HEIGHT = 65;
 
+var adForm = document.querySelector('.ad-form');
+var adFields = adForm.querySelectorAll('fieldset');
+var pinMain = document.querySelector('.map__pin--main');
+var inputAdressValue = adForm.querySelector('input[name=address]');
 var mapToggle = document.querySelector('.map');
-mapToggle.classList.remove('map--faded');
+
+// Функция удаления класса деактивации карты
+var activateMap = function () {
+  mapToggle.classList.remove('map--faded');
+};
+
 var mapPins = document.querySelector('.map__pins');
 
 var pinTemplate = document.querySelector('template')
@@ -96,8 +111,8 @@ var getRandomValuesFromArray = function (array) {
 };
 
 var createAd = function (i) {
-  var x = getRandomNumberInRange(300, 900) - (PIN_WIDTH / 2);
-  var y = getRandomNumberInRange(130, 630) - PIN_HEIGHT;
+  var x = getRandomNumberInRange((MIN_X - PIN_WIDTH / 2), (MAX_X - PIN_WIDTH / 2)) + PIN_WIDTH / 2;
+  var y = getRandomNumberInRange((MIN_Y - PIN_HEIGHT), (MAX_Y - PIN_HEIGHT)) + PIN_HEIGHT;
 
   var rentAd = {
     'author': {
@@ -187,7 +202,63 @@ var renderPins = function () {
   return fragmentPin;
 };
 
-fragmentMapAd.appendChild(renderAd(ads[0]));
+// Функция удаления атрибута "неактивный" с полей формы
+var activateForm = function () {
+  adForm.classList.remove('ad-form--disabled');
+  for (var i = 0; i < adFields.length; i++) {
+    adFields[i].disabled = false;
+  }
+};
 
-mapPins.appendChild(renderPins());
+// Функция отрисовки Пинов на экране
+var addNewPinsOnMap = function () {
+  var newPins = mapPins.appendChild(renderPins());
+  return newPins;
+};
+
+// var addNewAd = function () {
+//   for (var i = 0; i < ADS_AMOUNT; i++) {
+//     fragmentMapAd.appendChild(renderAd(ads[i]));
+//   }
+// };
+
+// Функция вычисления координаты главного пина
+inputAdressValue.value = parseInt(pinMain.style.left.substr(0, pinMain.style.left.length - 2), 10) + parseInt(PIN_MAIN_WIDTH / 2, 10) + ', ' + (parseInt(pinMain.style.top.substr(0, pinMain.style.top.length - 2), 10) + parseInt(PIN_MAIN_HEIGHT, 10));
+
+var OnPinMainMouseUpInputAdressValue = function () {
+  if (inputAdressValue.mouseup) {
+    inputAdressValue.value = createAd().location.x + ', ' + createAd().location.y;
+  }
+};
+
+// for (var i = 0; i < ADS_AMOUNT; i++) {
+
+// }
 mapAd.insertBefore(fragmentMapAd, pinBefore);
+
+var OnPinsMouseUp = function () {
+  var mapPin = document.querySelectorAll('.map__pin');
+
+  for (var i = 0; i < ADS_AMOUNT; i++) {
+    var getPinIndexFromCoord = function (evt) {
+      if (evt.clientX < (createAd(i).x - PIN_MAIN_WIDTH / 2)
+      && evt.clientX > (createAd(i).x + PIN_MAIN_WIDTH / 2)
+      && evt.clientY > createAd(i).y
+      && evt.clientY < (createAd(i).y + PIN_MAIN_HEIGHT)) {
+        fragmentMapAd.appendChild(renderAd(ads[i]));
+      }
+      return fragmentMapAd;
+    };
+
+    mapPin[i].addEventListener('mouseup', getPinIndexFromCoord);
+  }
+};
+
+
+// Событие, по которому удаляется класс деактивации карты
+pinMain.addEventListener('mouseup', activateMap);
+pinMain.addEventListener('mouseup', activateForm);
+pinMain.addEventListener('mouseup', OnPinMainMouseUpInputAdressValue);
+pinMain.addEventListener('mouseup', addNewPinsOnMap);
+pinMain.addEventListener('mouseup', OnPinsMouseUp);
+// mapPin.addEventListener('mouseup', addNewAd);
