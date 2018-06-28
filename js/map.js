@@ -62,7 +62,6 @@ var MAX_Y = 630;
 var PIN_MAIN_WIDTH = 65;
 var PIN_MAIN_HEIGHT = 65;
 var ESC_KEYCODE = 27;
-var ENTER_KEYCODE = 13;
 
 var adForm = document.querySelector('.ad-form');
 var adFields = adForm.querySelectorAll('fieldset');
@@ -81,6 +80,8 @@ var newPinsOnMap = document.querySelector('.map__pins');
 // Находит кнопку с классом '.map__pin' в шаблоне template
 var pinTemplate = document.querySelector('template').content.querySelector('.map__pin');
 var pinBefore = document.querySelector('.map__filters-container');
+
+var adOnMap = document.querySelector('.map__card');
 
 // Куда буду добавлять новое объявление в разметке
 var newAdOnMap = document.querySelector('.map');
@@ -205,8 +206,6 @@ var renderAd = function (ad) {
   return mapCard;
 };
 
-var fragmentMapAd = document.createDocumentFragment();
-
 // Функция отрисовки Пинов на карте
 var renderPins = function () {
   var fragmentPin = document.createDocumentFragment();
@@ -240,38 +239,38 @@ var OnPinMainMouseUpInputAdressValue = function () {
   }
 };
 
+// Создаю карточку объявления
+var addNewAd = function () {
+  var fragmentMapAd = document.createDocumentFragment();
+  fragmentMapAd.appendChild(renderAd());
+  newAdOnMap.insertBefore(fragmentMapAd, pinBefore);
+
+  adOnMap.classList.remove('hidden');
+
+  // Функция закрытия объявления
+  var closeAd = function () {
+    adOnMap.classList.add('hidden');
+  };
+
+  var onPopupEscPress = function (evt) {
+    if (evt.keyCode === ESC_KEYCODE) {
+      closeAd();
+    }
+  };
+
+  var adCloseButton = document.querySelector('.popup__close');
+
+  document.addEventListener('keydown', onPopupEscPress);
+  adCloseButton.addEventListener('click', closeAd);
+};
+
 var openAdModal = function () {
   var mapPin = document.querySelectorAll('.map__pins button:not(.map__pin--main)');
 
   mapPin.forEach(function (elem) {
     elem.addEventListener('click', function () {
       var id = elem.getAttribute('id');
-      fragmentMapAd.appendChild(renderAd(ads[id]));
-      newAdOnMap.insertBefore(fragmentMapAd, pinBefore);
-
-      var adCloseButton = document.querySelector('.popup__close');
-      var adOnMap = document.querySelector('.map__card');
-
-      // Функция закрытия объявления
-      var closeAd = function () {
-        adOnMap.classList.add('hidden');
-      };
-
-      var onPopupEscPress = function (evt) {
-        if (evt.keyCode === ESC_KEYCODE) {
-          closeAd();
-        }
-      };
-
-      var OnPopupCloseEnterPress = function (evt) {
-        if (evt.keyCode === ENTER_KEYCODE) {
-          closeAd();
-        }
-      };
-
-      document.addEventListener('keydown', onPopupEscPress);
-      adCloseButton.addEventListener('click', closeAd);
-      adCloseButton.addEventListener('keydown', OnPopupCloseEnterPress);
+      return addNewAd(ads[id]);
     });
   });
 };
@@ -284,4 +283,4 @@ pinMain.addEventListener('mouseup', addNewPinsOnMap);
 
 pinMain.addEventListener('mouseup', openAdModal);
 
-// mapPin.addEventListener('mouseup', addNewAd);
+pinMain.addEventListener('mouseup', addNewAd);
