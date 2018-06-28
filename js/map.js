@@ -61,6 +61,8 @@ var MIN_Y = 130;
 var MAX_Y = 630;
 var PIN_MAIN_WIDTH = 65;
 var PIN_MAIN_HEIGHT = 65;
+var ESC_KEYCODE = 27;
+var ENTER_KEYCODE = 13;
 
 var adForm = document.querySelector('.ad-form');
 var adFields = adForm.querySelectorAll('fieldset');
@@ -73,26 +75,31 @@ var activateMap = function () {
   mapToggle.classList.remove('map--faded');
 };
 
-var mapPins = document.querySelector('.map__pins');
+// Куда буду добавлять новые Пины в разметке
+var newPinsOnMap = document.querySelector('.map__pins');
 
-var pinTemplate = document.querySelector('template')
-  .content
-  .querySelector('.map__pin');
+// Находит кнопку с классом '.map__pin' в шаблоне template
+var pinTemplate = document.querySelector('template').content.querySelector('.map__pin');
 var pinBefore = document.querySelector('.map__filters-container');
 
-var mapAd = document.querySelector('.map');
+// Куда буду добавлять новое объявление в разметке
+var newAdOnMap = document.querySelector('.map');
+// Находит секцию с классом '.map__card' в шаблоне template
 var adTemplate = document.querySelector('template')
   .content
   .querySelector('.map__card');
 
+// Функция возвращает случайное значение между мин и макс
 var getRandomNumberInRange = function (min, max) {
   return Math.round(Math.random() * (max - min) + min);
 };
 
+// Функция возвращает случайный элемент из массива
 var getRandomValueFromArray = function (array) {
   return array[Math.floor(Math.random() * array.length)];
 };
 
+// Функция перемешивания клонированного массива
 var shuffleArray = function (array) {
   var cloneArray = array.slice();
   for (var i = cloneArray.length - 1; i >= 0; i--) {
@@ -104,12 +111,14 @@ var shuffleArray = function (array) {
   return cloneArray;
 };
 
+// Функция возвращает массив случайной длины
 var getRandomValuesFromArray = function (array) {
   var cloneArray = shuffleArray(array);
   cloneArray.length = getRandomNumberInRange(1, cloneArray.length);
   return cloneArray;
 };
 
+// Функция создания шаблонного объявления
 var createAd = function (i) {
   var x = getRandomNumberInRange((MIN_X - PIN_WIDTH / 2), (MAX_X - PIN_WIDTH / 2)) + PIN_WIDTH / 2;
   var y = getRandomNumberInRange((MIN_Y - PIN_HEIGHT), (MAX_Y - PIN_HEIGHT)) + PIN_HEIGHT;
@@ -139,6 +148,7 @@ var createAd = function (i) {
   return rentAd;
 };
 
+// Функция создания массива объявлений
 var createAds = function () {
   var ads = [];
   for (var i = 0; i < ADS_AMOUNT; i++) {
@@ -147,8 +157,10 @@ var createAds = function () {
   return ads;
 };
 
+// Создаю массив объявлений
 var ads = createAds();
 
+// Функция отрисовки Пина на карте
 var renderPin = function (pin) {
   var pinElement = pinTemplate.cloneNode(true);
 
@@ -160,6 +172,7 @@ var renderPin = function (pin) {
   return pinElement;
 };
 
+// Функция отрисовки объявления на карте
 var renderAd = function (ad) {
   var mapCard = adTemplate.cloneNode(true);
 
@@ -194,9 +207,11 @@ var renderAd = function (ad) {
 
 var fragmentMapAd = document.createDocumentFragment();
 
+// Функция отрисовки Пинов на карте
 var renderPins = function () {
   var fragmentPin = document.createDocumentFragment();
   for (var i = 0; i < ADS_AMOUNT; i++) {
+    pinTemplate.setAttribute('id', i);
     fragmentPin.appendChild(renderPin(ads[i]));
   }
   return fragmentPin;
@@ -212,15 +227,9 @@ var activateForm = function () {
 
 // Функция отрисовки Пинов на экране
 var addNewPinsOnMap = function () {
-  var newPins = mapPins.appendChild(renderPins());
+  var newPins = newPinsOnMap.appendChild(renderPins());
   return newPins;
 };
-
-// var addNewAd = function () {
-//   for (var i = 0; i < ADS_AMOUNT; i++) {
-//     fragmentMapAd.appendChild(renderAd(ads[i]));
-//   }
-// };
 
 // Функция вычисления координаты главного пина
 inputAdressValue.value = parseInt(pinMain.style.left.substr(0, pinMain.style.left.length - 2), 10) + parseInt(PIN_MAIN_WIDTH / 2, 10) + ', ' + (parseInt(pinMain.style.top.substr(0, pinMain.style.top.length - 2), 10) + parseInt(PIN_MAIN_HEIGHT, 10));
@@ -231,34 +240,48 @@ var OnPinMainMouseUpInputAdressValue = function () {
   }
 };
 
-// for (var i = 0; i < ADS_AMOUNT; i++) {
+var openAdModal = function () {
+  var mapPin = document.querySelectorAll('.map__pins button:not(.map__pin--main)');
 
-// }
-mapAd.insertBefore(fragmentMapAd, pinBefore);
+  mapPin.forEach(function (elem) {
+    elem.addEventListener('click', function () {
+      var id = elem.getAttribute('id');
+      fragmentMapAd.appendChild(renderAd(ads[id]));
+      newAdOnMap.insertBefore(fragmentMapAd, pinBefore);
 
-var OnPinsMouseUp = function () {
-  var mapPin = document.querySelectorAll('.map__pin');
+      var adCloseButton = document.querySelector('.popup__close');
+      var adOnMap = document.querySelector('.map__card');
 
-  for (var i = 0; i < ADS_AMOUNT; i++) {
-    var getPinIndexFromCoord = function (evt) {
-      if (evt.clientX < (createAd(i).x - PIN_MAIN_WIDTH / 2)
-      && evt.clientX > (createAd(i).x + PIN_MAIN_WIDTH / 2)
-      && evt.clientY > createAd(i).y
-      && evt.clientY < (createAd(i).y + PIN_MAIN_HEIGHT)) {
-        fragmentMapAd.appendChild(renderAd(ads[i]));
-      }
-      return fragmentMapAd;
-    };
+      // Функция закрытия объявления
+      var closeAd = function () {
+        adOnMap.classList.add('hidden');
+      };
 
-    mapPin[i].addEventListener('mouseup', getPinIndexFromCoord);
-  }
+      var onPopupEscPress = function (evt) {
+        if (evt.keyCode === ESC_KEYCODE) {
+          closeAd();
+        }
+      };
+
+      var OnPopupCloseEnterPress = function (evt) {
+        if (evt.keyCode === ENTER_KEYCODE) {
+          closeAd();
+        }
+      };
+
+      document.addEventListener('keydown', onPopupEscPress);
+      adCloseButton.addEventListener('click', closeAd);
+      adCloseButton.addEventListener('keydown', OnPopupCloseEnterPress);
+    });
+  });
 };
-
 
 // Событие, по которому удаляется класс деактивации карты
 pinMain.addEventListener('mouseup', activateMap);
 pinMain.addEventListener('mouseup', activateForm);
 pinMain.addEventListener('mouseup', OnPinMainMouseUpInputAdressValue);
 pinMain.addEventListener('mouseup', addNewPinsOnMap);
-pinMain.addEventListener('mouseup', OnPinsMouseUp);
+
+pinMain.addEventListener('mouseup', openAdModal);
+
 // mapPin.addEventListener('mouseup', addNewAd);
