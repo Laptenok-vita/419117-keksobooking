@@ -70,7 +70,7 @@ var inputAdressValue = adForm.querySelector('input[name=address]');
 var mapToggle = document.querySelector('.map');
 
 // Функция удаления класса деактивации карты
-var activateMap = function () {
+var OnPinMainMouseUpActivateMap = function () {
   mapToggle.classList.remove('map--faded');
 };
 
@@ -127,7 +127,7 @@ var createAd = function (i) {
       'avatar': 'img/avatars/user0' + (i + 1) + '.png'
     },
     'offer': {
-      'title': AD_TITLES[i + 1], //  Проблема с заголовком в объявлении №8. Заголовка нет.
+      'title': AD_TITLES[i],
       'address': x + ', ' + y,
       'price': getRandomNumberInRange(1000, 1000000),
       'type': getRandomValueFromArray(HOUSES_TYPES),
@@ -192,11 +192,10 @@ var renderAd = function (ad) {
 
   var photosBlock = mapCard.querySelector('.popup__photos');
   var photoTemplate = photosBlock.querySelector('.popup__photo');
-  photosBlock.removeChild(photoTemplate); //  Не удаляется блок фотографий с предыдущего объявления, фото накапливаются
-  for (i = 0; i < ad.offer.photos.length; i++) {
-
+  photosBlock.innerHTML = '';
+  for (var j = 0; j < ad.offer.photos.length; j++) {
     var photoElement = photoTemplate.cloneNode(true);
-    photoElement.src = ad.offer.photos[i];
+    photoElement.src = ad.offer.photos[j];
     photosBlock.appendChild(photoElement);
   }
 
@@ -208,7 +207,7 @@ var renderAd = function (ad) {
 // Функция отрисовки Пинов на карте
 var renderPins = function () {
   var fragmentPin = document.createDocumentFragment();
-  for (var i = 0; i < ADS_AMOUNT; i++) {
+  for (var i = 0; i < ADS_AMOUNT; i++) { //  При изменении счётчика в renderAd.featuresBlock меняется и этот счетчик. Почему?
     pinTemplate.setAttribute('id', i);
     fragmentPin.appendChild(renderPin(ads[i]));
   }
@@ -216,7 +215,7 @@ var renderPins = function () {
 };
 
 // Функция удаления атрибута "неактивный" с полей формы
-var activateForm = function () {
+var OnPinMainMouseUpActivateForm = function () {
   adForm.classList.remove('ad-form--disabled');
   for (var i = 0; i < adFields.length; i++) {
     adFields[i].disabled = false;
@@ -224,31 +223,32 @@ var activateForm = function () {
 };
 
 // Функция отрисовки Пинов на экране
-var addNewPinsOnMap = function () {
-  pinMain.removeEventListener('mouseup', addNewPinsOnMap);
+var OnPinMainMouseUpAddNewPinsOnMap = function () {
+  pinMain.removeEventListener('mouseup', OnPinMainMouseUpAddNewPinsOnMap);
   var newPins = newPinsOnMap.appendChild(renderPins());
   return newPins;
 };
 
 // Функция вычисления координаты главного пина
-inputAdressValue.value = parseInt(pinMain.style.left.substr(0, pinMain.style.left.length - 2), 10) + parseInt(PIN_MAIN_WIDTH / 2, 10) + ', ' + (parseInt(pinMain.style.top.substr(0, pinMain.style.top.length - 2), 10) + parseInt(PIN_MAIN_HEIGHT, 10));
+inputAdressValue.value = (parseInt(pinMain.style.left, 10) + Math.floor(PIN_MAIN_WIDTH / 2)) + ', ' + (parseInt(pinMain.style.top, 10) + PIN_MAIN_HEIGHT);
 
 var OnPinMainMouseUpInputAdressValue = function () {
-  if (inputAdressValue.mouseup) {
-    inputAdressValue.value = createAd().location.x + ', ' + createAd().location.y;
-  }
+  pinMain.style.left = getRandomNumberInRange((MIN_X - Math.floor(PIN_MAIN_WIDTH / 2)), (MAX_X - PIN_MAIN_WIDTH / 2)) + Math.floor(PIN_MAIN_WIDTH / 2) + 'px';
+  pinMain.style.top = getRandomNumberInRange((MIN_Y - PIN_MAIN_HEIGHT), (MAX_Y - PIN_MAIN_HEIGHT)) + PIN_MAIN_HEIGHT + 'px';
+  inputAdressValue.value = parseInt(pinMain.style.left, 10) + ', ' + parseInt(pinMain.style.top, 10);
+  return inputAdressValue.value;
 };
 
 // Создаю карточку объявления
-var addNewAd = function () {
+var OnPinMainMouseUpAddNewAd = function () {
   var fragmentMapAd = document.createDocumentFragment();
   fragmentMapAd.appendChild(adTemplate.cloneNode(true));
   newAdOnMap.insertBefore(fragmentMapAd, pinBefore);
-  pinMain.removeEventListener('mouseup', addNewAd);
+  pinMain.removeEventListener('mouseup', OnPinMainMouseUpAddNewAd);
 
   // Функция закрытия объявления
   var closeAd = function () {
-    var adOnMap = document.querySelector('.map__card'); //  Ищу один и тот же элемент локально, глобально не ищется, т.к. при инициализации страницы объявления нет на карте и класс .map__card в разметке не находится. Возможно стоит искать в template, на сколько корректно заполнение класса до вставки блока на страницу?
+    var adOnMap = document.querySelector('.map__card'); //  Ищу один и тот же элемент локально, глобально не ищется, т.к. при инициализации страницы на карте нет карточки  объявления и класс .map__card в разметке не находится. Это корректно?
     adOnMap.classList.add('hidden');
   };
 
@@ -264,12 +264,12 @@ var addNewAd = function () {
   adCloseButton.addEventListener('click', closeAd);
 };
 
-var openAdModal = function () {
+var OnPinMainMouseUpOpenAdModal = function () {
   var mapPin = document.querySelectorAll('.map__pins button:not(.map__pin--main)');
 
   mapPin.forEach(function (elem) {
     elem.addEventListener('click', function () {
-      var adOnMap = document.querySelector('.map__card'); //  Ищу один и тот же элемент локально, глобально не ищется, т.к. при инициализации страницы объявления нет на карте и класс .map__card в разметке не находится. Возможно стоит искать в template, на сколько корректно заполнение класса до вставки блока на страницу?
+      var adOnMap = document.querySelector('.map__card'); //  Ищу один и тот же элемент локально, глобально не ищется, т.к. при инициализации страницы на карте нет карточки  объявления и класс .map__card в разметке не находится. Это корректно?
       adOnMap.classList.remove('hidden');
 
       var id = elem.getAttribute('id');
@@ -278,12 +278,10 @@ var openAdModal = function () {
   });
 };
 
-// Событие, по которому удаляется класс деактивации карты
-pinMain.addEventListener('mouseup', activateMap);
-pinMain.addEventListener('mouseup', activateForm);
+// События, происходящие при нажатии на Пироженко(главный Пин)
+pinMain.addEventListener('mouseup', OnPinMainMouseUpActivateMap);
+pinMain.addEventListener('mouseup', OnPinMainMouseUpActivateForm);
 pinMain.addEventListener('mouseup', OnPinMainMouseUpInputAdressValue);
-pinMain.addEventListener('mouseup', addNewPinsOnMap);
-
-pinMain.addEventListener('mouseup', openAdModal);
-
-pinMain.addEventListener('mouseup', addNewAd);
+pinMain.addEventListener('mouseup', OnPinMainMouseUpAddNewPinsOnMap);
+pinMain.addEventListener('mouseup', OnPinMainMouseUpOpenAdModal);
+pinMain.addEventListener('mouseup', OnPinMainMouseUpAddNewAd);
