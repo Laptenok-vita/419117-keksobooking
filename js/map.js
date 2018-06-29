@@ -60,7 +60,7 @@ var MAX_X = 900;
 var MIN_Y = 130;
 var MAX_Y = 630;
 var PIN_MAIN_WIDTH = 65;
-var PIN_MAIN_HEIGHT = 65;
+var PIN_MAIN_HEIGHT = 87;
 var ESC_KEYCODE = 27;
 
 var adForm = document.querySelector('.ad-form');
@@ -80,8 +80,6 @@ var newPinsOnMap = document.querySelector('.map__pins');
 // Находит кнопку с классом '.map__pin' в шаблоне template
 var pinTemplate = document.querySelector('template').content.querySelector('.map__pin');
 var pinBefore = document.querySelector('.map__filters-container');
-
-var adOnMap = document.querySelector('.map__card');
 
 // Куда буду добавлять новое объявление в разметке
 var newAdOnMap = document.querySelector('.map');
@@ -129,7 +127,7 @@ var createAd = function (i) {
       'avatar': 'img/avatars/user0' + (i + 1) + '.png'
     },
     'offer': {
-      'title': AD_TITLES[i + 1],
+      'title': AD_TITLES[i + 1], //  Проблема с заголовком в объявлении №8. Заголовка нет.
       'address': x + ', ' + y,
       'price': getRandomNumberInRange(1000, 1000000),
       'type': getRandomValueFromArray(HOUSES_TYPES),
@@ -175,7 +173,7 @@ var renderPin = function (pin) {
 
 // Функция отрисовки объявления на карте
 var renderAd = function (ad) {
-  var mapCard = adTemplate.cloneNode(true);
+  var mapCard = document.querySelector('.popup');
 
   mapCard.querySelector('.popup__title').textContent = ad.offer.title;
   mapCard.querySelector('.popup__text--address').textContent = ad.offer.address;
@@ -194,8 +192,9 @@ var renderAd = function (ad) {
 
   var photosBlock = mapCard.querySelector('.popup__photos');
   var photoTemplate = photosBlock.querySelector('.popup__photo');
-  photosBlock.removeChild(photoTemplate);
+  photosBlock.removeChild(photoTemplate); //  Не удаляется блок фотографий с предыдущего объявления, фото накапливаются
   for (i = 0; i < ad.offer.photos.length; i++) {
+
     var photoElement = photoTemplate.cloneNode(true);
     photoElement.src = ad.offer.photos[i];
     photosBlock.appendChild(photoElement);
@@ -226,6 +225,7 @@ var activateForm = function () {
 
 // Функция отрисовки Пинов на экране
 var addNewPinsOnMap = function () {
+  pinMain.removeEventListener('mouseup', addNewPinsOnMap);
   var newPins = newPinsOnMap.appendChild(renderPins());
   return newPins;
 };
@@ -242,13 +242,13 @@ var OnPinMainMouseUpInputAdressValue = function () {
 // Создаю карточку объявления
 var addNewAd = function () {
   var fragmentMapAd = document.createDocumentFragment();
-  fragmentMapAd.appendChild(renderAd());
+  fragmentMapAd.appendChild(adTemplate.cloneNode(true));
   newAdOnMap.insertBefore(fragmentMapAd, pinBefore);
-
-  adOnMap.classList.remove('hidden');
+  pinMain.removeEventListener('mouseup', addNewAd);
 
   // Функция закрытия объявления
   var closeAd = function () {
+    var adOnMap = document.querySelector('.map__card'); //  Ищу один и тот же элемент локально, глобально не ищется, т.к. при инициализации страницы объявления нет на карте и класс .map__card в разметке не находится. Возможно стоит искать в template, на сколько корректно заполнение класса до вставки блока на страницу?
     adOnMap.classList.add('hidden');
   };
 
@@ -269,8 +269,11 @@ var openAdModal = function () {
 
   mapPin.forEach(function (elem) {
     elem.addEventListener('click', function () {
+      var adOnMap = document.querySelector('.map__card'); //  Ищу один и тот же элемент локально, глобально не ищется, т.к. при инициализации страницы объявления нет на карте и класс .map__card в разметке не находится. Возможно стоит искать в template, на сколько корректно заполнение класса до вставки блока на страницу?
+      adOnMap.classList.remove('hidden');
+
       var id = elem.getAttribute('id');
-      return addNewAd(ads[id]);
+      return renderAd(ads[id]);
     });
   });
 };
