@@ -70,8 +70,12 @@ var inputAdressValue = adForm.querySelector('input[name=address]');
 var mapToggle = document.querySelector('.map');
 
 // Функция удаления класса деактивации карты
-var OnPinMainMouseUpActivateMap = function () {
+var onPinMainMouseUpActivateMap = function () {
   mapToggle.classList.remove('map--faded');
+  adForm.classList.remove('ad-form--disabled');
+  for (var i = 0; i < adFields.length; i++) {
+    adFields[i].disabled = false;
+  }
 };
 
 // Куда буду добавлять новые Пины в разметке
@@ -214,17 +218,9 @@ var renderPins = function () {
   return fragmentPin;
 };
 
-// Функция удаления атрибута "неактивный" с полей формы
-var OnPinMainMouseUpActivateForm = function () {
-  adForm.classList.remove('ad-form--disabled');
-  for (var i = 0; i < adFields.length; i++) {
-    adFields[i].disabled = false;
-  }
-};
-
 // Функция отрисовки Пинов на экране
-var OnPinMainMouseUpAddNewPinsOnMap = function () {
-  pinMain.removeEventListener('mouseup', OnPinMainMouseUpAddNewPinsOnMap);
+var onPinMainMouseUpAddNewPinsOnMap = function () {
+  pinMain.removeEventListener('mouseup', onPinMainMouseUpAddNewPinsOnMap);
   var newPins = newPinsOnMap.appendChild(renderPins());
   return newPins;
 };
@@ -232,7 +228,7 @@ var OnPinMainMouseUpAddNewPinsOnMap = function () {
 // Функция вычисления координаты главного пина
 inputAdressValue.value = (parseInt(pinMain.style.left, 10) + Math.floor(PIN_MAIN_WIDTH / 2)) + ', ' + (parseInt(pinMain.style.top, 10) + PIN_MAIN_HEIGHT);
 
-var OnPinMainMouseUpInputAdressValue = function () {
+var onPinMainMouseUpInputAdressValue = function () {
   pinMain.style.left = getRandomNumberInRange((MIN_X - Math.floor(PIN_MAIN_WIDTH / 2)), (MAX_X - PIN_MAIN_WIDTH / 2)) + Math.floor(PIN_MAIN_WIDTH / 2) + 'px';
   pinMain.style.top = getRandomNumberInRange((MIN_Y - PIN_MAIN_HEIGHT), (MAX_Y - PIN_MAIN_HEIGHT)) + PIN_MAIN_HEIGHT + 'px';
   inputAdressValue.value = parseInt(pinMain.style.left, 10) + ', ' + parseInt(pinMain.style.top, 10);
@@ -240,11 +236,11 @@ var OnPinMainMouseUpInputAdressValue = function () {
 };
 
 // Создаю карточку объявления
-var OnPinMainMouseUpAddNewAd = function () {
+var onPinMainMouseUpAddNewAd = function () {
   var fragmentMapAd = document.createDocumentFragment();
   fragmentMapAd.appendChild(adTemplate.cloneNode(true));
   newAdOnMap.insertBefore(fragmentMapAd, pinBefore);
-  pinMain.removeEventListener('mouseup', OnPinMainMouseUpAddNewAd);
+  pinMain.removeEventListener('mouseup', onPinMainMouseUpAddNewAd);
 
   // Функция закрытия объявления
   var closeAd = function () {
@@ -264,7 +260,7 @@ var OnPinMainMouseUpAddNewAd = function () {
   adCloseButton.addEventListener('click', closeAd);
 };
 
-var OnPinMainMouseUpOpenAdModal = function () {
+var onPinMainMouseUpOpenAdModal = function () {
   var mapPin = document.querySelectorAll('.map__pins button:not(.map__pin--main)');
 
   mapPin.forEach(function (elem) {
@@ -279,9 +275,12 @@ var OnPinMainMouseUpOpenAdModal = function () {
 };
 
 // События, происходящие при нажатии на Пироженко(главный Пин)
-pinMain.addEventListener('mouseup', OnPinMainMouseUpActivateMap);
-pinMain.addEventListener('mouseup', OnPinMainMouseUpActivateForm);
-pinMain.addEventListener('mouseup', OnPinMainMouseUpInputAdressValue);
-pinMain.addEventListener('mouseup', OnPinMainMouseUpAddNewPinsOnMap);
-pinMain.addEventListener('mouseup', OnPinMainMouseUpOpenAdModal);
-pinMain.addEventListener('mouseup', OnPinMainMouseUpAddNewAd);
+pinMain.addEventListener('mouseup', function () {
+  onPinMainMouseUpActivateMap();
+  onPinMainMouseUpInputAdressValue();
+  onPinMainMouseUpOpenAdModal();
+});
+
+pinMain.addEventListener('mouseup', onPinMainMouseUpAddNewPinsOnMap);
+pinMain.addEventListener('mouseup', onPinMainMouseUpAddNewAd);
+// pinMain.addEventListener('mouseup', onPinMainMouseUpOpenAdModal);
