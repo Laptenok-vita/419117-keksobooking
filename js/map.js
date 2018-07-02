@@ -63,30 +63,24 @@ var PIN_MAIN_WIDTH = 65;
 var PIN_MAIN_HEIGHT = 87;
 var ESC_KEYCODE = 27;
 
+var adOnMap;
+var pinList;
+
 var adForm = document.querySelector('.ad-form');
 var adFields = adForm.querySelectorAll('fieldset');
-var pinMain = document.querySelector('.map__pin--main');
+var pinMain = document.querySelector('.map__pin--main'); // Пироженко
 var inputAdressValue = adForm.querySelector('input[name=address]');
 var mapToggle = document.querySelector('.map');
 
-// Функция удаления класса деактивации карты
-var onPinMainMouseUpActivateMap = function () {
-  mapToggle.classList.remove('map--faded');
-  adForm.classList.remove('ad-form--disabled');
-  for (var i = 0; i < adFields.length; i++) {
-    adFields[i].disabled = false;
-  }
-};
-
 // Куда буду добавлять новые Пины в разметке
-var newPinsOnMap = document.querySelector('.map__pins');
+var blockContainAllPins = document.querySelector('.map__pins');
 
 // Находит кнопку с классом '.map__pin' в шаблоне template
 var pinTemplate = document.querySelector('template').content.querySelector('.map__pin');
 var pinBefore = document.querySelector('.map__filters-container');
 
 // Куда буду добавлять новое объявление в разметке
-var newAdOnMap = document.querySelector('.map');
+var blockMap = document.querySelector('.map');
 // Находит секцию с классом '.map__card' в шаблоне template
 var adTemplate = document.querySelector('template')
   .content
@@ -160,9 +154,6 @@ var createAds = function () {
   return ads;
 };
 
-// Создаю массив объявлений
-var ads = createAds();
-
 // Функция отрисовки Пина на карте
 var renderPin = function (pin) {
   var pinElement = pinTemplate.cloneNode(true);
@@ -178,7 +169,6 @@ var renderPin = function (pin) {
 // Функция отрисовки объявления на карте
 var renderAd = function (ad) {
   var mapCard = document.querySelector('.popup');
-
   mapCard.querySelector('.popup__title').textContent = ad.offer.title;
   mapCard.querySelector('.popup__text--address').textContent = ad.offer.address;
   mapCard.querySelector('.popup__text--price').textContent = ad.offer.price + ' ₽/ночь';
@@ -208,64 +198,47 @@ var renderAd = function (ad) {
   return mapCard;
 };
 
+// Создаю массив объявлений
+var ads = createAds();
+
 // Функция отрисовки Пинов на карте
 var renderPins = function () {
   var fragmentPin = document.createDocumentFragment();
-  for (var i = 0; i < ADS_AMOUNT; i++) { //  При изменении счётчика в renderAd.featuresBlock меняется и этот счетчик. Почему?
+  for (var i = 0; i < ADS_AMOUNT; i++) {
     pinTemplate.setAttribute('id', i);
     fragmentPin.appendChild(renderPin(ads[i]));
   }
-  return fragmentPin;
-};
-
-// Функция отрисовки Пинов на экране
-var onPinMainMouseUpAddNewPinsOnMap = function () {
-  pinMain.removeEventListener('mouseup', onPinMainMouseUpAddNewPinsOnMap);
-  var newPins = newPinsOnMap.appendChild(renderPins());
+  var newPins = blockContainAllPins.appendChild(fragmentPin);
   return newPins;
 };
 
-// Функция вычисления координаты главного пина
-inputAdressValue.value = (parseInt(pinMain.style.left, 10) + Math.floor(PIN_MAIN_WIDTH / 2)) + ', ' + (parseInt(pinMain.style.top, 10) + PIN_MAIN_HEIGHT);
-
-var onPinMainMouseUpInputAdressValue = function () {
-  pinMain.style.left = getRandomNumberInRange((MIN_X - Math.floor(PIN_MAIN_WIDTH / 2)), (MAX_X - PIN_MAIN_WIDTH / 2)) + Math.floor(PIN_MAIN_WIDTH / 2) + 'px';
-  pinMain.style.top = getRandomNumberInRange((MIN_Y - PIN_MAIN_HEIGHT), (MAX_Y - PIN_MAIN_HEIGHT)) + PIN_MAIN_HEIGHT + 'px';
-  inputAdressValue.value = parseInt(pinMain.style.left, 10) + ', ' + parseInt(pinMain.style.top, 10);
-  return inputAdressValue.value;
-};
+renderPins();
 
 // Создаю карточку объявления
-var onPinMainMouseUpAddNewAd = function () {
-  var fragmentMapAd = document.createDocumentFragment();
-  fragmentMapAd.appendChild(adTemplate.cloneNode(true));
-  newAdOnMap.insertBefore(fragmentMapAd, pinBefore);
-  pinMain.removeEventListener('mouseup', onPinMainMouseUpAddNewAd);
-
-  // Функция закрытия объявления
-  var closeAd = function () {
-    var adOnMap = document.querySelector('.map__card'); //  Ищу один и тот же элемент локально, глобально не ищется, т.к. при инициализации страницы на карте нет карточки  объявления и класс .map__card в разметке не находится. Это корректно?
-    adOnMap.classList.add('hidden');
-  };
-
-  var onPopupEscPress = function (evt) {
-    if (evt.keyCode === ESC_KEYCODE) {
-      closeAd();
-    }
-  };
-
-  var adCloseButton = document.querySelector('.popup__close');
-
-  document.addEventListener('keydown', onPopupEscPress);
-  adCloseButton.addEventListener('click', closeAd);
+var addNewAd = function () {
+  if (!blockMap.querySelector('.map__card')) {
+    var fragmentMapAd = document.createDocumentFragment();
+    fragmentMapAd.appendChild(adTemplate.cloneNode(true));
+    blockMap.insertBefore(fragmentMapAd, pinBefore);
+  }
 };
 
-var onPinMainMouseUpOpenAdModal = function () {
-  var mapPin = document.querySelectorAll('.map__pins button:not(.map__pin--main)');
+addNewAd();
 
-  mapPin.forEach(function (elem) {
+adOnMap = blockMap.querySelector('.map__card');
+pinList = blockContainAllPins.querySelectorAll('.map__pins button:not(.map__pin--main)');
+
+// Удаляю класс hidden с Пинов при нажатии на Пироженко
+var pinMainDisplayNewPinsOnMapHandler = function () {
+  pinList.forEach(function (elem) {
+    elem.classList.remove('hidden');
+  });
+};
+
+// Обработчик событий на каждый Пин
+var pinMainOpenAdModalHandler = function () {
+  pinList.forEach(function (elem) {
     elem.addEventListener('click', function () {
-      var adOnMap = document.querySelector('.map__card'); //  Ищу один и тот же элемент локально, глобально не ищется, т.к. при инициализации страницы на карте нет карточки  объявления и класс .map__card в разметке не находится. Это корректно?
       adOnMap.classList.remove('hidden');
 
       var id = elem.getAttribute('id');
@@ -274,13 +247,45 @@ var onPinMainMouseUpOpenAdModal = function () {
   });
 };
 
+// Функция закрытия объявления
+var closeAd = function () {
+  adOnMap.classList.add('hidden');
+};
+
+var onPopupEscPress = function (evt) {
+  if (evt.keyCode === ESC_KEYCODE) {
+    closeAd();
+  }
+};
+
+var adCloseButton = document.querySelector('.popup__close');
+document.addEventListener('keydown', onPopupEscPress);
+adCloseButton.addEventListener('click', closeAd);
+
+// Функция удаления класса деактивации карты
+var pinMainActivateMapHandler = function () {
+  mapToggle.classList.remove('map--faded');
+  adForm.classList.remove('ad-form--disabled');
+  for (var i = 0; i < adFields.length; i++) {
+    adFields[i].disabled = false;
+  }
+};
+
+// Значение Пироженка при инициализации страницы
+inputAdressValue.value = (parseInt(pinMain.style.left, 10) + Math.floor(PIN_MAIN_WIDTH / 2)) + ', ' + (parseInt(pinMain.style.top, 10) + PIN_MAIN_HEIGHT);
+
+// Функция вычисления координаты Пироженка
+var pinMainSetAdressHandler = function () {
+  pinMain.style.left = getRandomNumberInRange((MIN_X - Math.floor(PIN_MAIN_WIDTH / 2)), (MAX_X - PIN_MAIN_WIDTH / 2)) + Math.floor(PIN_MAIN_WIDTH / 2) + 'px';
+  pinMain.style.top = getRandomNumberInRange((MIN_Y - PIN_MAIN_HEIGHT), (MAX_Y - PIN_MAIN_HEIGHT)) + PIN_MAIN_HEIGHT + 'px';
+  inputAdressValue.value = parseInt(pinMain.style.left, 10) + ', ' + parseInt(pinMain.style.top, 10);
+  return inputAdressValue.value;
+};
+
 // События, происходящие при нажатии на Пироженко(главный Пин)
 pinMain.addEventListener('mouseup', function () {
-  onPinMainMouseUpActivateMap();
-  onPinMainMouseUpInputAdressValue();
-  onPinMainMouseUpOpenAdModal();
+  pinMainActivateMapHandler();
+  pinMainSetAdressHandler();
+  pinMainDisplayNewPinsOnMapHandler();
+  pinMainOpenAdModalHandler();
 });
-
-pinMain.addEventListener('mouseup', onPinMainMouseUpAddNewPinsOnMap);
-pinMain.addEventListener('mouseup', onPinMainMouseUpAddNewAd);
-// pinMain.addEventListener('mouseup', onPinMainMouseUpOpenAdModal);
