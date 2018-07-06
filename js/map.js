@@ -236,7 +236,7 @@ var renderPins = function () {
 renderPins();
 
 // Создаю карточку объявления
-var addNewAd = function addNewAd() {
+var addNewAd = function () {
   if (!blockMap.querySelector('.map__card')) {
     var fragmentMapAd = document.createDocumentFragment();
     fragmentMapAd.appendChild(adTemplate.cloneNode(true));
