@@ -76,6 +76,7 @@ var adOnMap;
 var pinList;
 
 var adForm = document.querySelector('.ad-form');
+var adFormSubmitButton = document.querySelector('.ad-form');
 var resetButton = document.querySelector('.ad-form__reset');
 var adFields = adForm.querySelectorAll('fieldset');
 var pinMain = document.querySelector('.map__pin--main'); // Пироженко
@@ -87,6 +88,10 @@ var initPinMainCoord = {
 var inputAdressValue = adForm.querySelector('input[name=address]');
 var allInput = adForm.querySelectorAll('input');
 var mapToggle = document.querySelector('.map');
+var selectedHouseType = adForm.elements.type;
+var minCost = adForm.querySelector('#price');
+var timeIn = adForm.elements.timein;
+var timeOut = adForm.elements.timeout;
 
 // Куда буду добавлять новые Пины в разметке
 var blockContainAllPins = document.querySelector('.map__pins');
@@ -298,26 +303,15 @@ var pinMainSetAdressHandler = function () {
   return inputAdressValue.value;
 };
 
-// События, происходящие при нажатии на Пироженко(главный Пин)
-pinMain.addEventListener('mouseup', function () {
-  pinMainActivateMapHandler();
-  pinMainSetAdressHandler();
-  pinMainDisplayNewPinsOnMapHandler();
-  pinMainOpenAdModalHandler();
-});
-
 var addErrorClass = function (elem) {
   elem.target.classList.add('error');
 };
 
-adForm.addEventListener('invalid', addErrorClass, true);
-
-var resetMap = function (elem) {
-  elem.preventDefault();
-
+var formButtonResetMapHandler = function () {
   for (var i = 0; i < allInput.length; i++) {
     if (allInput.innerHTML !== '') {
       allInput[i].value = '';
+      allInput[i].classList.remove('error');
     }
   }
 
@@ -336,6 +330,10 @@ var resetMap = function (elem) {
   }
 
   closeAd();
+};
+
+var formButtonShowSuccesMessage = function (elem) {
+  elem.preventDefault();
 
   var successMessage = document.querySelector('.success');
   successMessage.classList.remove('hidden');
@@ -348,19 +346,10 @@ var resetMap = function (elem) {
   document.addEventListener('keydown', closeSuccessMessage);
 };
 
-adForm.addEventListener('submit', resetMap);
-resetButton.addEventListener('click', resetMap);
-
-var selectedHouseType = adForm.elements.type;
-var minCost = adForm.querySelector('#price');
-
 var setMinCostFromHousesType = function () {
   minCost.setAttribute('placeholder', HOUSES_CHARACTERS.cost[selectedHouseType.value]);
   minCost.setAttribute('min', HOUSES_CHARACTERS.cost[selectedHouseType.value]);
 };
-
-var timeIn = adForm.elements.timein;
-var timeOut = adForm.elements.timeout;
 
 var setCheckOutFromCheckIn = function () {
   timeOut.selectedIndex = timeIn.selectedIndex;
@@ -370,6 +359,36 @@ var setCheckInFromCheckOut = function () {
   timeIn.selectedIndex = timeOut.selectedIndex;
 };
 
+var roomsAmount = adForm.elements.rooms;
+var capacity = adForm.elements.capacity;
+
+var setCapacityFromRooms = function () {
+  var roomsValue = roomsAmount.value;
+  var capacityValue = capacity.value;
+  if (roomsValue !== '100' && roomsValue < capacityValue) {
+    capacity.setCustomValidity('Количество гостей не должно превышать ' + roomsValue);
+  } else if (roomsValue === '100' && capacityValue !== '0') {
+    capacity.setCustomValidity('Комната не для гостей');
+  } else {
+    capacity.setCustomValidity('');
+  }
+};
+
+// События
+pinMain.addEventListener('mouseup', function () {
+  pinMainActivateMapHandler();
+  pinMainSetAdressHandler();
+  pinMainDisplayNewPinsOnMapHandler();
+  pinMainOpenAdModalHandler();
+});
+
+adForm.addEventListener('invalid', addErrorClass, true);
+adForm.addEventListener('submit', formButtonShowSuccesMessage);
+adFormSubmitButton.addEventListener('submit', formButtonResetMapHandler);
+resetButton.addEventListener('click', formButtonResetMapHandler);
+
 selectedHouseType.addEventListener('change', setMinCostFromHousesType);
 timeIn.addEventListener('change', setCheckOutFromCheckIn);
 timeOut.addEventListener('change', setCheckInFromCheckOut);
+roomsAmount.addEventListener('change', setCapacityFromRooms);
+capacity.addEventListener('change', setCapacityFromRooms);
