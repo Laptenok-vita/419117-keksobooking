@@ -93,6 +93,13 @@ var minCost = adForm.querySelector('#price');
 var timeIn = adForm.elements.timein;
 var timeOut = adForm.elements.timeout;
 
+var roomsAmount = adForm.elements.rooms;
+var capacity = adForm.elements.capacity;
+capacity.innerHTML = '';
+var option = document.createElement('option');
+option.text = 'для 1 гостя';
+capacity.add(option);
+
 // Куда буду добавлять новые Пины в разметке
 var blockContainAllPins = document.querySelector('.map__pins');
 
@@ -359,18 +366,26 @@ var setCheckInFromCheckOut = function () {
   timeIn.selectedIndex = timeOut.selectedIndex;
 };
 
-var roomsAmount = adForm.elements.rooms;
-var capacity = adForm.elements.capacity;
-
 var setCapacityFromRooms = function () {
-  var roomsValue = roomsAmount.value;
-  var capacityValue = capacity.value;
-  if (roomsValue !== '100' && roomsValue < capacityValue) {
-    capacity.setCustomValidity('Количество гостей не должно превышать ' + roomsValue);
-  } else if (roomsValue === '100' && capacityValue !== '0') {
-    capacity.setCustomValidity('Комната не для гостей');
+  capacity.innerHTML = '';
+  if (roomsAmount.selectedIndex < 3) {
+    var ended = '';
+    for (var i = 0; i <= roomsAmount.selectedIndex; i++) {
+      option = document.createElement('option');
+      switch (i) {
+        case 0:
+          ended = 'я';
+          break;
+        default:
+          ended = 'ей';
+      }
+      option.text = 'для ' + (i + 1) + ' гост' + ended;
+      capacity.add(option);
+    }
   } else {
-    capacity.setCustomValidity('');
+    option = document.createElement('option');
+    option.text = 'Не для гостей';
+    capacity.add(option);
   }
 };
 
