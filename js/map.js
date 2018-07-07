@@ -18,11 +18,19 @@ var HOUSES_TYPES = [
   'bungalo'
 ];
 
-var HOUSES_TYPES_DICT = {
-  'palace': 'Дворец',
-  'flat': 'Квартира',
-  'house': 'Дом',
-  'bungalo': 'Бунгало'
+var HOUSES_CHARACTERS = {
+  'type': {
+    'palace': 'Дворец',
+    'flat': 'Квартира',
+    'house': 'Дом',
+    'bungalo': 'Бунгало'
+  },
+  'cost': {
+    'palace': 10000,
+    'flat': 1000,
+    'house': 5000,
+    'bungalo': 0
+  }
 };
 
 var CHECKIN_DATES = [
@@ -63,14 +71,34 @@ var PIN_MAIN_WIDTH = 65;
 var PIN_MAIN_HEIGHT = 87;
 var ESC_KEYCODE = 27;
 
+
 var adOnMap;
 var pinList;
 
 var adForm = document.querySelector('.ad-form');
+var adFormSubmitButton = document.querySelector('.ad-form');
+var resetButton = document.querySelector('.ad-form__reset');
 var adFields = adForm.querySelectorAll('fieldset');
 var pinMain = document.querySelector('.map__pin--main'); // Пироженко
+var initPinMainCoord = {
+  initPinMainLeft: (parseInt(pinMain.style.left, 10) + Math.floor(PIN_MAIN_WIDTH / 2)),
+  initPinMainTop: (parseInt(pinMain.style.top, 10) + PIN_MAIN_HEIGHT)
+};
+
 var inputAdressValue = adForm.querySelector('input[name=address]');
+var allInput = adForm.querySelectorAll('input');
 var mapToggle = document.querySelector('.map');
+var selectedHouseType = adForm.elements.type;
+var minCost = adForm.querySelector('#price');
+var timeIn = adForm.elements.timein;
+var timeOut = adForm.elements.timeout;
+
+var roomsAmount = adForm.elements.rooms;
+var capacity = adForm.elements.capacity;
+capacity.innerHTML = '';
+var option = document.createElement('option');
+option.text = 'для 1 гостя';
+capacity.add(option);
 
 // Куда буду добавлять новые Пины в разметке
 var blockContainAllPins = document.querySelector('.map__pins');
@@ -172,7 +200,7 @@ var renderAd = function (ad) {
   mapCard.querySelector('.popup__title').textContent = ad.offer.title;
   mapCard.querySelector('.popup__text--address').textContent = ad.offer.address;
   mapCard.querySelector('.popup__text--price').textContent = ad.offer.price + ' ₽/ночь';
-  mapCard.querySelector('.popup__type').textContent = HOUSES_TYPES_DICT[ad.offer.type];
+  mapCard.querySelector('.popup__type').textContent = HOUSES_CHARACTERS.type[ad.offer.type];
   mapCard.querySelector('.popup__text--capacity').textContent = ad.offer.rooms + ' комнаты для ' + ad.offer.guests + ' гостей';
   mapCard.querySelector('.popup__text--time').textContent = 'Заезд после ' + ad.offer.checkin + ', выезд до ' + ad.offer.checkout;
 
@@ -282,10 +310,100 @@ var pinMainSetAdressHandler = function () {
   return inputAdressValue.value;
 };
 
-// События, происходящие при нажатии на Пироженко(главный Пин)
+var addErrorClass = function (elem) {
+  elem.target.classList.add('error');
+};
+
+var formButtonResetMapHandler = function () {
+  for (var i = 0; i < allInput.length; i++) {
+    if (allInput.innerHTML !== '') {
+      allInput[i].value = '';
+      allInput[i].classList.remove('error');
+    }
+  }
+
+  mapToggle.classList.add('map--faded');
+  adForm.classList.add('ad-form--disabled');
+  for (i = 0; i < adFields.length; i++) {
+    adFields[i].disabled = true;
+  }
+
+  inputAdressValue.value = initPinMainCoord.initPinMainLeft + ', ' + initPinMainCoord.initPinMainTop;
+  pinMain.style.left = initPinMainCoord.initPinMainLeft - Math.floor(PIN_MAIN_WIDTH / 2) + 'px';
+  pinMain.style.top = initPinMainCoord.initPinMainTop - PIN_MAIN_HEIGHT + 'px';
+
+  for (i = 0; i < pinList.length; i++) {
+    pinList[i].classList.add('hidden');
+  }
+
+  closeAd();
+};
+
+var formButtonShowSuccesMessage = function (elem) {
+  elem.preventDefault();
+
+  var successMessage = document.querySelector('.success');
+  successMessage.classList.remove('hidden');
+
+  var closeSuccessMessage = function (evt) {
+    if (evt.keyCode === ESC_KEYCODE) {
+      successMessage.classList.add('hidden');
+    }
+  };
+  document.addEventListener('keydown', closeSuccessMessage);
+};
+
+var setMinCostFromHousesType = function () {
+  minCost.setAttribute('placeholder', HOUSES_CHARACTERS.cost[selectedHouseType.value]);
+  minCost.setAttribute('min', HOUSES_CHARACTERS.cost[selectedHouseType.value]);
+};
+
+var setCheckOutFromCheckIn = function () {
+  timeOut.selectedIndex = timeIn.selectedIndex;
+};
+
+var setCheckInFromCheckOut = function () {
+  timeIn.selectedIndex = timeOut.selectedIndex;
+};
+
+var setCapacityFromRooms = function () {
+  capacity.innerHTML = '';
+  if (roomsAmount.selectedIndex < 3) {
+    var ended = '';
+    for (var i = 0; i <= roomsAmount.selectedIndex; i++) {
+      option = document.createElement('option');
+      switch (i) {
+        case 0:
+          ended = 'я';
+          break;
+        default:
+          ended = 'ей';
+      }
+      option.text = 'для ' + (i + 1) + ' гост' + ended;
+      capacity.add(option);
+    }
+  } else {
+    option = document.createElement('option');
+    option.text = 'Не для гостей';
+    capacity.add(option);
+  }
+};
+
+// События
 pinMain.addEventListener('mouseup', function () {
   pinMainActivateMapHandler();
   pinMainSetAdressHandler();
   pinMainDisplayNewPinsOnMapHandler();
   pinMainOpenAdModalHandler();
 });
+
+adForm.addEventListener('invalid', addErrorClass, true);
+adForm.addEventListener('submit', formButtonShowSuccesMessage);
+adFormSubmitButton.addEventListener('submit', formButtonResetMapHandler);
+resetButton.addEventListener('click', formButtonResetMapHandler);
+
+selectedHouseType.addEventListener('change', setMinCostFromHousesType);
+timeIn.addEventListener('change', setCheckOutFromCheckIn);
+timeOut.addEventListener('change', setCheckInFromCheckOut);
+roomsAmount.addEventListener('change', setCapacityFromRooms);
+capacity.addEventListener('change', setCapacityFromRooms);
