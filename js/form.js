@@ -10,7 +10,7 @@
 
   var allInput = window.map.adForm.querySelectorAll('input');
   var resetButton = document.querySelector('.ad-form__reset');
-  var adFormSubmitButton = document.querySelector('.ad-form__submit');
+  var adFormSubmitButton = window.map.adForm.querySelector('.ad-form__submit');
 
   var selectedHouseType = window.map.adForm.elements.type;
   var minCost = window.map.adForm.elements.price;
@@ -62,7 +62,23 @@
     }
   };
 
-    // RESET FORM
+  var formButtonShowSuccesMessage = function () {
+    var successMessage = document.querySelector('.success');
+    successMessage.classList.remove('hidden');
+
+    var closeSuccessMessage = function (evt) {
+      if (evt.keyCode === window.map.ESC_KEYCODE) {
+        successMessage.classList.add('hidden');
+        document.removeEventListener('keydown', closeSuccessMessage);
+      }
+    };
+    document.addEventListener('keydown', closeSuccessMessage);
+
+    setTimeout(function () {
+      successMessage.classList.add('hidden');
+    }, 10000);
+  };
+
   var formButtonResetMapHandler = function () {
     for (var i = 0; i < allInput.length; i++) {
       if (allInput.innerHTML !== '') {
@@ -76,38 +92,57 @@
     for (i = 0; i < window.map.adFields.length; i++) {
       window.map.adFields[i].disabled = true;
     }
-
-    for (i = 0; i < window.map.pinList.length; i++) {
-      window.map.pinList[i].classList.add('hidden');
+    for (i = 0; i < window.map.blockContainAllPins.querySelectorAll('.map__pins button:not(.map__pin--main)').length; i++) {
+      window.map.blockContainAllPins.querySelectorAll('.map__pins button:not(.map__pin--main)')[i].classList.add('hidden');
     }
     window.map.closeAd();
   };
 
-  // SUBMIT FORM
-  var formButtonShowSuccesMessage = function (elem) {
-    elem.preventDefault();
-
-    var successMessage = document.querySelector('.success');
-    successMessage.classList.remove('hidden');
-
-    var closeSuccessMessage = function () { // Изменила функцию, проверить
-      if (window.map.PopupEscPressHandler) {
-        successMessage.classList.add('hidden');
-      }
-    };
-    document.addEventListener('keydown', closeSuccessMessage);
+  var formButtonShowSuccessMessage = function () {
+    formButtonShowSuccesMessage();
+    formButtonResetMapHandler();
   };
 
-  // EVENTS
+  var formButtonShowUnsuccesMessage = function (er) {
+    formButtonResetMapHandler();
+    window.map.adForm.classList.add('ad-form--disabled');
+
+    var unsuccesMessage = document.createElement('div');
+    unsuccesMessage.classList.add('error-message');
+    unsuccesMessage.textContent = 'Упс, ' + er + '. Повторите действие позднее';
+    window.map.blockMap.appendChild(unsuccesMessage);
+
+    setTimeout(function () {
+      unsuccesMessage.remove('div');
+    }, 10000);
+  };
+
+  var onSubmitBtnClick = function (evt) {
+    evt.preventDefault();
+    if (window.map.adForm.checkValidity()) {
+      console.log(new FormData(window.map.adForm));
+      window.backend.upLoadData(new FormData(window.map.adForm), formButtonShowSuccessMessage, formButtonShowUnsuccesMessage);
+    } else {
+      var fields = window.map.adForm.querySelectorAll('input, select, textarea');
+
+      fields.forEach(function (item) {
+        if (!item.validity.valid) {
+          item.classList.add('invalid');
+        }
+      });
+    }
+  };
+
   window.map.adForm.addEventListener('invalid', addErrorClass, true);
-  window.map.adForm.addEventListener('submit', formButtonShowSuccesMessage);
+  // adFormSubmitButton.addEventListener('click', formButtonResetMapHandler);
+
+  adFormSubmitButton.addEventListener('click', onSubmitBtnClick);
+
+  resetButton.addEventListener('click', formButtonResetMapHandler);
 
   selectedHouseType.addEventListener('change', setMinCostFromHousesType);
   timeIn.addEventListener('change', setCheckOutFromCheckIn);
   timeOut.addEventListener('change', setCheckInFromCheckOut);
   roomsAmount.addEventListener('change', setCapacityFromRooms);
   capacity.addEventListener('change', setCapacityFromRooms);
-
-  adFormSubmitButton.addEventListener('submit', formButtonResetMapHandler);
-  resetButton.addEventListener('click', formButtonResetMapHandler);
 })();

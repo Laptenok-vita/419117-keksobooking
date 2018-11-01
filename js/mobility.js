@@ -18,7 +18,7 @@
 
     window.map.pinMainActivateMapHandler();
     window.map.pinMainDisplayNewPinsOnMapHandler();
-    window.map.pinMainOpenAdModalHandler();
+    window.pin.pinMainOpenAdModalHandler();
 
     var startCoords = {
       x: evt.clientX,

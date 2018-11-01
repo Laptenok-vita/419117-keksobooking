@@ -8,21 +8,10 @@
     'bungalo': 'Бунгало'
   };
 
-  // Функция создания массива объявлений
-  var createAds = function () {
-    var ads = [];
-    for (var i = 0; i < window.data.ADS_AMOUNT; i++) {
-      ads[i] = window.data.createAd(i);
-    }
-    return ads;
-  };
-
-    // Создаю массив объявлений
-  var ads = createAds();
-
-  // Функция создания объявления на карте
   var renderAd = function (ad) {
     var mapCard = document.querySelector('.popup');
+    mapCard.querySelector('img').src = ad.author.avatar;
+
     mapCard.querySelector('.popup__title').textContent = ad.offer.title;
     mapCard.querySelector('.popup__text--address').textContent = ad.offer.address;
     mapCard.querySelector('.popup__text--price').textContent = ad.offer.price + ' ₽/ночь';
@@ -42,18 +31,19 @@
     var photoTemplate = photosBlock.querySelector('.popup__photo');
     photosBlock.innerHTML = '';
     for (var j = 0; j < ad.offer.photos.length; j++) {
-      var photoElement = photoTemplate.cloneNode(true);
+      if (photoTemplate) {
+        var photoElement = photoTemplate.cloneNode(true);
+      } else {
+        photoElement = window.map.adTemplate.querySelector('.popup__photo').cloneNode(true);
+      }
       photoElement.src = ad.offer.photos[j];
       photosBlock.appendChild(photoElement);
     }
-
-    mapCard.querySelector('img').src = ad.author.avatar;
 
     return mapCard;
   };
 
   window.ad = {
-    ads: ads,
     renderAd: renderAd,
   };
 })();
